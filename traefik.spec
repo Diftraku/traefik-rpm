@@ -2,7 +2,7 @@
 
 Name:           traefik
 Version:        2.11.37
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        The Cloud Native Application Proxy
 ExclusiveArch:  x86_64
 
@@ -14,8 +14,11 @@ Source1:        traefik.service
 Source2:        traefik.sysconfig
 Source3:        https://github.com/traefik/traefik/raw/v%{version}/traefik.sample.toml
 Source4:        LICENSE
+Source5:        sysusers-traefik.conf
 
 BuildRequires:  systemd-units
+BuildRequires:  systemd-rpm-macros
+%{?sysusers_requires_compat}
 
 Requires(pre):  shadow-utils
 Requires:       systemd glibc
@@ -39,13 +42,10 @@ install -D %{SOURCE1} %{buildroot}/%{_unitdir}/%{name}.service
 install -D %{SOURCE2} %{buildroot}/%{_sysconfdir}/sysconfig/%{name}
 install -D %{SOURCE3} %{buildroot}/%{_sysconfdir}/%{name}/%{name}.toml
 install -D %{SOURCE4} %{buildroot}/%{_docdir}/%{name}/LICENSE
+install -p -D -m 0644 %{SOURCE5} %{buildroot}%{_sysusersdir}/traefik.conf
 
 %pre
-getent group %{name} >/dev/null || groupadd -r %{name}
-getent passwd %{name} >/dev/null || \
-    useradd -r -g %{name} -d %{_sharedstatedir}/%{name} -s /sbin/nologin \
-    -c "%{name} user" %{name}
-exit 0
+%sysusers_create_compat %{SOURCE5}
 
 %post
 %systemd_post %{name}.service
@@ -54,16 +54,6 @@ exit 0
 %systemd_preun %{name}.service
 
 %postun
-case "$1" in
-  0)
-    # This is an uninstallation.
-    getent passwd %{name} >/dev/null && userdel %{name}
-    getent group %{name} >/dev/null && groupdel %{name}
-  ;;
-  1)
-    # This is an upgrade.
-  ;;
-esac
 %systemd_postun_with_restart %{name}.service
 
 %clean
@@ -71,6 +61,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
+%{_sysusersdir}/traefik.conf
 %attr(755, root, root) %{_bindir}/traefik
 %dir %attr(750, root, %{name}) %{_sysconfdir}/%{name}
 %attr(644, root, root) %{_unitdir}/%{name}.service
@@ -80,6 +71,9 @@ rm -rf %{buildroot}
 %doc %{_docdir}/%{name}/LICENSE
 
 %changelog
+* Wed Feb 11 2026 Diftraku <diftraku@gmail.com> - 2.11.37-2
+- Use sysusers for dynamic allocation of users with appropriate Provides
+
 * Wed Feb 11 2026 Diftraku <diftraku@gmail.com> - 2.11.37-1
 - Update to v2.11.37
 
