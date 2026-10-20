@@ -1,8 +1,8 @@
 %define debug_package %{nil}
 
 Name:           traefik
-Version:        2.11.37
-Release:        2%{?dist}
+Version:        3.7.15
+Release:        1%{?dist}
 Summary:        The Cloud Native Application Proxy
 ExclusiveArch:  x86_64
 
@@ -71,6 +71,9 @@ rm -rf %{buildroot}
 %doc %{_docdir}/%{name}/LICENSE
 
 %changelog
+* Tue Oct 21 2026 Diftraku <diftraku@gmail.com> - 3.7.15-1
+- Yeet to v3.7.15
+
 * Wed Feb 11 2026 Diftraku <diftraku@gmail.com> - 2.11.37-2
 - Use sysusers for dynamic allocation of users with appropriate Provides
 
